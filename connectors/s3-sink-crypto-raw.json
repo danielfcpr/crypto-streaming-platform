@@ -1,0 +1,30 @@
+{
+  "name": "s3-sink-crypto-quotes-raw",
+  "config": {
+    "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+    "tasks.max": "1",
+    "topics": "crypto_quotes_raw",
+
+    "s3.region": "eu-west-3",
+    "s3.bucket.name": "crypto-streaming-bronze",
+
+    "s3.credentials.provider.class": "com.amazonaws.auth.EnvironmentVariableCredentialsProvider",
+
+    "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+    "format.class": "io.confluent.connect.s3.format.json.JsonFormat",
+
+    "topics.dir": "bronze",
+    "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
+
+    "flush.size": "50",
+    "rotate.interval.ms": "60000",
+
+    "schema.compatibility": "NONE",
+
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+  }
+}
