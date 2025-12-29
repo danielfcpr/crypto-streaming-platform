@@ -10,19 +10,16 @@ def build_spark(app_name: str) -> SparkSession:
     spark = (
         SparkSession.builder
         .appName(app_name)
-        # important for overwriting only touched partitions (dt=...) in "latest"
         .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
         .getOrCreate()
     )
 
-    # S3A auth: use env vars inside container
+    # S3A auth
     spark._jsc.hadoopConfiguration().set(
         "fs.s3a.aws.credentials.provider",
         "com.amazonaws.auth.EnvironmentVariableCredentialsProvider"
     )
     spark._jsc.hadoopConfiguration().set("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-
-    # optional, but helps with some regions/setups
     spark._jsc.hadoopConfiguration().set("fs.s3a.path.style.access", "true")
 
     return spark
@@ -78,9 +75,7 @@ def main():
         .filter(F.col("event_time_ts").isNotNull())
     )
 
-    # -------------------------
     # 1) Silver HISTORY (append)
-    # -------------------------
     (
         df.select(
             "dt",
@@ -106,10 +101,8 @@ def main():
         .parquet(out_history)
     )
 
-    # -------------------------
     # 2) Silver LATEST (overwrite only dt partitions we touched)
     # Keep latest per (dt, coin_id) by event_time_ts
-    # -------------------------
     w = Window.partitionBy("dt", "coin_id").orderBy(F.col("event_time_ts").desc(), F.col("last_updated_ts").desc_nulls_last())
     df_latest = df.withColumn("rn", F.row_number().over(w)).filter(F.col("rn") == 1).drop("rn")
 

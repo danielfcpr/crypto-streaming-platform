@@ -10,7 +10,10 @@ logs:
 	$(COMPOSE) logs -f --tail=100
 
 spark-silver:
-	$(COMPOSE) run --rm spark-submit
+	$(COMPOSE) run --rm spark-silver
+
+spark-gold:
+	$(COMPOSE) run --rm spark-gold
 
 clean:
 	$(COMPOSE) down -v
