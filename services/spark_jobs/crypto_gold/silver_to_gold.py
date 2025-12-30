@@ -147,7 +147,7 @@ def main():
 
     # Gold outputs
     gold_quotes_prefix = os.environ.get("GOLD_QUOTES_PREFIX", "gold/quotes_1m")
-    gold_daily_prefix = os.environ.get("GOLD_DAILY_PREFIX", "gold/daily_symbol_metrics")
+    gold_daily_prefix = os.environ.get("GOLD_DAILY_PREFIX", "gold/daily_symbol")
     gold_snapshot_prefix = os.environ.get("GOLD_SNAPSHOT_PREFIX", "gold/latest_snapshot")
 
     # Quality settings
@@ -163,10 +163,6 @@ def main():
 
     spark = build_spark("crypto-silver-to-gold")
     spark.conf.set("spark.sql.shuffle.partitions", str(shuffle_partitions))
-
-    run_id = str(uuid.uuid4())
-    started_at = datetime.now(timezone.utc)
-    t0 = time.time()
 
     # Read from Silver history (append-only base for analytics)
     df_hist = spark.read.parquet(in_history)
