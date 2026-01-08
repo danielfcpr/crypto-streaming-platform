@@ -219,6 +219,31 @@ services:
       - "org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262"
       - "/opt/spark_jobs/crypto_gold/silver_to_gold.py"
 
+  athena-apply:
+    build:
+      context: ./services/athena_apply
+    container_name: athena-apply
+    env_file:
+      - .env
+    environment:
+
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+      AWS_REGION: "${AWS_REGION}"
+
+      # Athena runner config (add these to .env)
+      ATHENA_DB_NAME: "${ATHENA_DATABASE}"
+      ATHENA_WORKGROUP: "${ATHENA_WORKGROUP}"
+      ATHENA_OUTPUT_S3: "${ATHENA_OUTPUT_S3}"
+
+      # Where the SQL files live inside the container
+      ATHENA_SQL_DIR: "${ATHENA_SQL_DIR}"
+
+    volumes:
+      - ./sql/athena:/sql/athena:ro
+
+    # Run and exit (no long-running container)
+    restart: "no"
 
 volumes:
   kafka_data:
