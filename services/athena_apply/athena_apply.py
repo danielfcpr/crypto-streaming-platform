@@ -14,8 +14,9 @@ Env vars expected:
   ATHENA_OUTPUT_S3      (required) e.g. s3://my-bucket/athena-results/
   ATHENA_SQL_DIR        (optional default if --sql-dir not given)
 
-Optional:
   ATHENA_QUERY_TIMEOUT_SEC (default: 900)
+  ATHENA_FILES          (optional) comma-separated list of SQL filenames to apply
+                        e.g. "99_repair_partitions.sql"
 """
 
 import argparse
@@ -69,12 +70,39 @@ def split_statements(sql_text: str) -> List[str]:
     cleaned = "\n".join(lines)
 
     stmts = []
-    buff = []
     for chunk in cleaned.split(";"):
         s = chunk.strip()
         if s:
             stmts.append(s)
     return stmts
+
+
+def _parse_athena_files_env(sql_dir: Path) -> Optional[List[Path]]:
+    """
+    If ATHENA_FILES is set (comma-separated filenames), return the ordered list of Path objects.
+    Otherwise return None.
+    """
+    files_env = os.environ.get("ATHENA_FILES", "").strip()
+    if not files_env:
+        return None
+
+    wanted = [f.strip() for f in files_env.split(",") if f.strip()]
+    if not wanted:
+        return None
+
+    missing = []
+    paths: List[Path] = []
+    for name in wanted:
+        p = sql_dir / name
+        if not p.exists() or not p.is_file():
+            missing.append(name)
+        else:
+            paths.append(p)
+
+    if missing:
+        raise ValueError(f"ATHENA_FILES references missing file(s) in {sql_dir}: {missing}")
+
+    return paths
 
 
 def start_query(
@@ -193,8 +221,16 @@ def main():
     timeout_sec = int(os.environ.get("ATHENA_QUERY_TIMEOUT_SEC", "900"))
 
     sql_dir = Path(args.sql_dir)
+
+    # Default: all *.sql sorted
     files = list_sql_files(sql_dir)
 
+    # NEW: if ATHENA_FILES is set, override to only those files (in that order)
+    override_files = _parse_athena_files_env(sql_dir)
+    if override_files is not None:
+        files = override_files
+
+    # Keep existing CLI filter (applied after ATHENA_FILES override)
     if args.only:
         files = [p for p in files if args.only in p.name]
         if not files:

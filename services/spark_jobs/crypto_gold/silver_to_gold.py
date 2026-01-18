@@ -125,7 +125,6 @@ def freshness_check(df, max_lag_minutes: int):
 def deduplicate_quotes(df):
     """
     For Gold quotes, dedup on (dt, coin_id, event_time_ts) keeping latest last_updated_ts.
-    This is a reasonable “uniqueness” enforcement without requiring a hard constraint system.
     """
     w = (
         Window.partitionBy("dt", "coin_id", "event_time_ts")

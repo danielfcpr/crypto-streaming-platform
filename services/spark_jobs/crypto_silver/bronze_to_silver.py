@@ -101,7 +101,7 @@ def main():
         .parquet(out_history)
     )
 
-    # 2) Silver LATEST (overwrite only dt partitions we touched)
+    # 2) Silver LATEST (overwrite only dt partitions)
     # Keep latest per (dt, coin_id) by event_time_ts
     w = Window.partitionBy("dt", "coin_id").orderBy(F.col("event_time_ts").desc(), F.col("last_updated_ts").desc_nulls_last())
     df_latest = df.withColumn("rn", F.row_number().over(w)).filter(F.col("rn") == 1).drop("rn")

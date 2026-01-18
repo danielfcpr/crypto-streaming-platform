@@ -120,7 +120,6 @@ def main() -> None:
                     "total_volume_usd": coin.get("total_volume"),
                     "price_change_percentage_24h": coin.get("price_change_percentage_24h"),
 
-                    # optional metadata from API (useful later)
                     "market_cap_rank": coin.get("market_cap_rank"),
                     "last_updated": coin.get("last_updated"),
                 }

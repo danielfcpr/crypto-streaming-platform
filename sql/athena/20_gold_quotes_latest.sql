@@ -10,6 +10,6 @@ CREATE EXTERNAL TABLE IF NOT EXISTS crypto_lakehouse.gold_quotes_latest (
   last_updated_ts         timestamp,
   event_time_ts           timestamp
 )
-PARTITIONED BY (dt date)
+
 STORED AS PARQUET
 LOCATION 's3://crypto-streaming-bronze/gold/latest_snapshot/';

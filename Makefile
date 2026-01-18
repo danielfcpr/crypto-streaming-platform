@@ -18,5 +18,14 @@ spark-gold:
 athena-apply:
 	$(COMPOSE) run --rm athena-apply
 
+athena-repair:
+	$(COMPOSE) run --rm athena-repair
+
 clean:
 	$(COMPOSE) down -v
+
+airflow-up:
+	docker compose up -d airflow-postgres airflow-init airflow-webserver airflow-scheduler
+
+airflow-logs:
+	docker compose logs -f --tail=100 airflow-webserver airflow-scheduler

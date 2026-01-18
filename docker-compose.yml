@@ -232,7 +232,7 @@ services:
       AWS_REGION: "${AWS_REGION}"
 
       # Athena runner config (add these to .env)
-      ATHENA_DB_NAME: "${ATHENA_DATABASE}"
+      ATHENA_DATABASE: "${ATHENA_DATABASE}"
       ATHENA_WORKGROUP: "${ATHENA_WORKGROUP}"
       ATHENA_OUTPUT_S3: "${ATHENA_OUTPUT_S3}"
 
@@ -245,7 +245,122 @@ services:
     # Run and exit (no long-running container)
     restart: "no"
 
+  athena-repair:
+    build:
+      context: ./services/athena_apply
+    container_name: athena-repair
+    env_file:
+      - .env
+    environment:
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+      AWS_REGION: "${AWS_REGION}"
+
+      ATHENA_DB_NAME: "${ATHENA_DATABASE}"
+      ATHENA_WORKGROUP: "${ATHENA_WORKGROUP}"
+      ATHENA_OUTPUT_S3: "${ATHENA_OUTPUT_S3}"
+
+      # where SQL files live inside the container
+      ATHENA_SQL_DIR: "${ATHENA_SQL_DIR}"
+
+      # IMPORTANT: only run the repair SQL
+      ATHENA_FILES: "99_repair_partitions.sql"
+
+    volumes:
+      - ./sql/athena:/sql/athena:ro
+
+
+  airflow-postgres:
+    image: postgres:15
+    container_name: airflow-postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U airflow" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  airflow-init:
+    build:
+      context: ./services/airflow
+    container_name: airflow-init
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW_UID: "50000"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs/airflow:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    command: >
+      bash -c "airflow db migrate && airflow users create \
+            --username admin \
+            --password admin \
+            --firstname Admin \
+            --lastname Daniel \
+            --role Admin \
+            --email admin@example.com"
+
+  airflow-webserver:
+    build:
+      context: ./services/airflow
+    container_name: airflow-webserver
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    ports:
+      - "8081:8080"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "False"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs/airflow:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+
+      # Allow Airflow to run "docker compose run ..."
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/opt/project:rw
+    command: webserver
+
+  airflow-scheduler:
+    build:
+      context: ./services/airflow
+    container_name: airflow-scheduler
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs/airflow:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+
+      # Allow Airflow to run "docker compose run ..."
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/opt/project:rw
+    command: scheduler
+
 volumes:
   kafka_data:
   connect_data:
   ivy_cache:
+  airflow_pgdata:
