@@ -302,13 +302,10 @@ services:
       - ./logs/airflow:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
     command: >
-      bash -c "airflow db migrate && airflow users create \
-            --username admin \
-            --password admin \
-            --firstname Admin \
-            --lastname Daniel \
-            --role Admin \
-            --email admin@example.com"
+      bash -c "airflow db migrate &&
+               airflow users create --username admin --password admin --firstname Admin --lastname Daniel --role Admin --email admin@example.com || true"
+  
+  
 
   airflow-webserver:
     build:
