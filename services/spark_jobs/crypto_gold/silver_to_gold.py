@@ -162,6 +162,7 @@ def main():
 
     spark = build_spark("crypto-silver-to-gold")
     spark.conf.set("spark.sql.shuffle.partitions", str(shuffle_partitions))
+    spark.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
 
     # Read from Silver history (append-only base for analytics)
     df_hist = spark.read.parquet(in_history)
@@ -205,7 +206,7 @@ def main():
         df_quotes
         .repartition("dt")
         .write
-        .mode("append")
+        .mode("overwrite").partitionBy("dt")
         .partitionBy("dt")
         .parquet(out_quotes)
     )
@@ -229,7 +230,7 @@ def main():
         df_daily
         .repartition("dt")
         .write
-        .mode("append")
+        .mode("overwrite")
         .partitionBy("dt")
         .parquet(out_daily)
     )
