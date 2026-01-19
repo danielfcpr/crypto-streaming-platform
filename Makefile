@@ -1,7 +1,7 @@
 COMPOSE = docker compose
 
 up:
-	$(COMPOSE) up -d
+	$(COMPOSE) up -d zookeeper kafka kafdrop kafka-connect ingest_coingecko spark spark-worker airflow-postgres airflow-webserver airflow-scheduler
 
 down:
 	$(COMPOSE) down

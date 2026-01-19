@@ -311,6 +311,7 @@ services:
     build:
       context: ./services/airflow
     container_name: airflow-webserver
+    user: "0:0"
     depends_on:
       airflow-postgres:
         condition: service_healthy
@@ -319,6 +320,7 @@ services:
     ports:
       - "8081:8080"
     environment:
+      DOCKER_API_VERSION: "1.43"
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
@@ -337,12 +339,14 @@ services:
     build:
       context: ./services/airflow
     container_name: airflow-scheduler
+    user: "0:0"
     depends_on:
       airflow-postgres:
         condition: service_healthy
       airflow-init:
         condition: service_completed_successfully
     environment:
+      DOCKER_API_VERSION: "1.43"
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"

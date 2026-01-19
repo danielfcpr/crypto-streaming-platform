@@ -19,13 +19,21 @@ with DAG(
     max_active_runs=1,
     tags=["crypto", "lakehouse", "spark"],
 ) as dag:
+    check_s3_sink_running = BashOperator(
+        task_id="check_s3_sink_running",
+        bash_command=r"""
+        set -euo pipefail
+        curl -sf http://kafka-connect:8083/connectors/s3-sink-crypto-quotes-raw/status \
+          | grep -q '"state":"RUNNING"'
+        """,
+    )
 
     spark_bronze_to_silver = BashOperator(
         task_id="spark_bronze_to_silver",
         bash_command="""
         set -euo pipefail
         cd /opt/project
-        docker compose run --rm spark-silver
+        docker compose run --rm --no-deps spark-silver
         """,
     )
 
@@ -34,14 +42,18 @@ with DAG(
         bash_command="""
         set -euo pipefail
         cd /opt/project
-        docker compose run --rm spark-gold
+        docker compose run --rm --no-deps spark-gold
         """,
     )
 
     athena_repair = BashOperator(
         task_id="athena_repair",
-        bash_command="docker compose run --rm athena-repair",
+        bash_command="""
+        set -euo pipefail
+        cd /opt/project
+        docker compose run --rm --no-deps athena-repair
+        """,
     )
 
     # chaining
-    spark_bronze_to_silver >> spark_silver_to_gold >> athena_repair
+    check_s3_sink_running >> spark_bronze_to_silver >> spark_silver_to_gold >> athena_repair
