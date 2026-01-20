@@ -12,4 +12,4 @@ CREATE EXTERNAL TABLE IF NOT EXISTS crypto_lakehouse.gold_quotes_latest (
 )
 
 STORED AS PARQUET
-LOCATION 's3://crypto-streaming-bronze/gold/latest_snapshot/';
+LOCATION 's3://s3-crypto-streaming-bucket/gold/latest_snapshot/';

@@ -6,7 +6,7 @@
     "topics": "crypto_quotes_raw",
 
     "s3.region": "eu-west-3",
-    "s3.bucket.name": "crypto-streaming-bronze",
+    "s3.bucket.name": "s3-crypto-streaming-bucket",
 
     "s3.credentials.provider.class": "com.amazonaws.auth.EnvironmentVariableCredentialsProvider",
 

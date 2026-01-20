@@ -12,4 +12,4 @@ CREATE EXTERNAL TABLE IF NOT EXISTS crypto_lakehouse.gold_quotes_daily (
 )
 PARTITIONED BY (dt date)
 STORED AS PARQUET
-LOCATION 's3://crypto-streaming-bronze/gold/daily_symbol/';
+LOCATION 's3://s3-crypto-streaming-bucket/gold/daily_symbol/';
