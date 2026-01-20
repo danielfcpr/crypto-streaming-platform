@@ -32,8 +32,10 @@ with DAG(
         task_id="spark_bronze_to_silver",
         bash_command="""
         set -euo pipefail
-        cd /opt/project
-        docker compose run --rm --no-deps spark-silver
+        docker compose \
+          -p crypto-streaming-platform \
+          --project-directory /opt/project \
+          run --rm spark-silver
         """,
     )
 
@@ -41,8 +43,10 @@ with DAG(
         task_id="spark_silver_to_gold",
         bash_command="""
         set -euo pipefail
-        cd /opt/project
-        docker compose run --rm --no-deps spark-gold
+        docker compose \
+          -p crypto-streaming-platform \
+          --project-directory /opt/project \
+          run --rm spark-gold
         """,
     )
 
@@ -50,8 +54,10 @@ with DAG(
         task_id="athena_repair",
         bash_command="""
         set -euo pipefail
-        cd /opt/project
-        docker compose run --rm --no-deps athena-repair
+        docker compose \
+          -p crypto-streaming-platform \
+          --project-directory /opt/project \
+          run --rm --no-deps athena-repair
         """,
     )
 

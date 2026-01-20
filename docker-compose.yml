@@ -6,6 +6,9 @@ services:
     container_name: zookeeper
     ports:
       - "2181:2181"
+    volumes:
+      - zookeeper_data:/data
+      - zookeeper_datalog:/datalog
 
   kafka:
     image: wurstmeister/kafka:latest
@@ -25,7 +28,6 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
 
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
@@ -146,7 +148,8 @@ services:
 
   spark-silver:
     build:
-      context: ./services/spark
+      context: .
+      dockerfile: services/spark/Dockerfile
     container_name: spark-silver
     depends_on:
       - spark
@@ -167,7 +170,6 @@ services:
       SPARK_SUBMIT_OPTS: "-Divy.cache.dir=/tmp/ivy -Divy.home=/tmp/ivy"
 
     volumes:
-      - ./services/spark_jobs:/opt/spark_jobs
       - ivy_cache:/tmp/ivy
 
     entrypoint: [ "/opt/spark/bin/spark-submit" ]
@@ -182,7 +184,8 @@ services:
 
   spark-gold:
     build:
-      context: ./services/spark
+      context: .
+      dockerfile: services/spark/Dockerfile
     container_name: spark-gold
     depends_on:
       - spark
@@ -207,7 +210,6 @@ services:
       SPARK_LOCAL_DIRS: /tmp/spark
       SPARK_SUBMIT_OPTS: "-Divy.cache.dir=/tmp/ivy -Divy.home=/tmp/ivy"
     volumes:
-      - ./services/spark_jobs:/opt/spark_jobs
       - ivy_cache:/tmp/ivy
     entrypoint: [ "/opt/spark/bin/spark-submit" ]
     command:
@@ -247,7 +249,9 @@ services:
 
   athena-repair:
     build:
-      context: ./services/athena_apply
+      context: .
+      dockerfile: services/athena_apply/Dockerfile
+
     container_name: athena-repair
     env_file:
       - .env
@@ -265,9 +269,6 @@ services:
 
       # IMPORTANT: only run the repair SQL
       ATHENA_FILES: "99_repair_partitions.sql"
-
-    volumes:
-      - ./sql/athena:/sql/athena:ro
 
 
   airflow-postgres:
@@ -304,7 +305,6 @@ services:
     command: >
       bash -c "airflow db migrate &&
                airflow users create --username admin --password admin --firstname Admin --lastname Daniel --role Admin --email admin@example.com || true"
-  
   
 
   airflow-webserver:
@@ -362,6 +362,14 @@ services:
 
 volumes:
   kafka_data:
+    name: crypto_kafka_data
+  zookeeper_data:
+    name: crypto_zookeeper_data
+  zookeeper_datalog:
+    name: crypto_zookeeper_datalog
   connect_data:
+    name: crypto_connect_data
   ivy_cache:
+    name: crypto_ivy_cache
   airflow_pgdata:
+    name: crypto_airflow_pgdata

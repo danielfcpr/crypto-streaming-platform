@@ -1,7 +1,10 @@
-COMPOSE = docker compose
+COMPOSE = docker compose -p crypto-streaming-platform
 
 up:
 	$(COMPOSE) up -d zookeeper kafka kafdrop kafka-connect ingest_coingecko spark spark-worker airflow-postgres airflow-webserver airflow-scheduler
+
+stop:
+	$(COMPOSE) stop
 
 down:
 	$(COMPOSE) down
