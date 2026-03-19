@@ -14,7 +14,7 @@ with DAG(
     default_args=DEFAULT_ARGS,
     description="Bronze->Silver->Gold (Spark on Docker Compose)",
     start_date=datetime(2026, 1, 1),
-    schedule=None,          # manual trigger for now (senior choice while debugging)
+    schedule=None,          # manual trigger for now
     catchup=False,
     max_active_runs=1,
     tags=["crypto", "lakehouse", "spark"],

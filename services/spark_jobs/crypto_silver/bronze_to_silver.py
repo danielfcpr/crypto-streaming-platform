@@ -50,8 +50,8 @@ def main():
         StructField("vs_currency", StringType(), True),
         StructField("ingestion_run_id", StringType(), True),
         StructField("source", StringType(), True),
-        StructField("market_cap_usd", LongType(), True),
-        StructField("total_volume_usd", LongType(), True),
+        StructField("market_cap_usd", DoubleType(), True),
+        StructField("total_volume_usd", DoubleType(), True),
         StructField("name", StringType(), True),
         StructField("event_time", StringType(), True),
     ])
